@@ -168,3 +168,73 @@ tts.speak(
  null,
  null
 );
+
+
+
+----------------------------
+
+
+User Voice
+ ↓
+Android Speech → Text
+ ↓
+PHP API
+ ↓
+GPT-4.1-mini (Intent Extraction)
+ ↓
+Conversation Logic (PHP)
+ ↓
+Next Question / Property List
+ ↓
+Android TTS Voice
+
+
+# Exact Prompt (You Should Use This)
+You are an AI assistant for a real estate app.
+
+Extract the following fields from the sentence below:
+- city
+- purpose (buy or rent)
+- property_type (flat, house, plot)
+- budget
+
+If a field is missing, return null.
+Return ONLY valid JSON.
+
+Sentence:
+"I want to buy a flat in Indore under 50 lakh"
+
+
+Expected Output
+{
+  "city": "Indore",
+  "purpose": "buy",
+  "property_type": "flat",
+  "budget": "50 lakh"
+}
+
+
+Hindi / Hinglish Support
+
+GPT models already support Hindi + Hinglish.
+
+Example input:
+
+"Mujhe Indore me flat buy karna hai 50 lakh ke under"
+
+Correct output:
+
+{
+  "city": "Indore",
+  "purpose": "buy",
+  "property_type": "flat",
+  "budget": "50 lakh"
+}
+
+
+Final Recommendation (For Our App)
+
+1 Model: GPT-4.1-mini / GPT-4o-mini
+2 Use AI only for extraction
+3 Conversation control in PHP
+4 Voice handled on Android
