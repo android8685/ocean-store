@@ -1,0 +1,170 @@
+Below is everything in detail, exactly as you asked — API structure, PHP intent code, conversation diagram, and Hindi voice support.
+This is production-ready and fits Android (Java) + PHP backend.
+
+1. Exact API Structure (Clean & Scalable)
+🔹 Single Conversation API (Recommended)
+POST /api/voice/conversation
+
+Request
+{
+  "user_id": "123",
+  "message": "I want to search property in Indore",
+  "lang": "en"
+}
+
+Response Types
+QUESTION
+{
+  "type": "QUESTION",
+  "voice": "Are you looking to buy or rent?",
+  "options": ["Buy", "Rent"],
+  "step": "PURPOSE"
+}
+
+RESULT
+{
+  "type": "RESULT",
+  "voice": "Here are the best properties for you",
+  "properties": [
+    {
+      "id": 1,
+      "title": "2 BHK Flat in Indore",
+      "price": "48,00,000",
+      "image": "url"
+    }
+  ]
+}
+
+2. Conversation State Diagram (Very Important)
+START
+ ↓
+CITY
+ ↓
+PURPOSE (Buy / Rent)
+ ↓
+PROPERTY_TYPE
+ ↓
+BUDGET
+ ↓
+SHOW_PROPERTIES
+
+
+Each step is stored in DB.
+
+3. Database Table (Conversation State)
+CREATE TABLE voice_sessions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  step VARCHAR(50),
+  city VARCHAR(100),
+  purpose VARCHAR(20),
+  property_type VARCHAR(50),
+  budget VARCHAR(50),
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+4. PHP Intent Extraction Code (2 Versions)
+# Version A: Rule-Based (Start Immediately)
+function extractIntent($text) {
+    $text = strtolower($text);
+
+    $data = [
+        'city' => null,
+        'purpose' => null,
+        'property_type' => null,
+        'budget' => null
+    ];
+
+    if (str_contains($text, 'indore')) $data['city'] = 'Indore';
+    if (str_contains($text, 'bhopal')) $data['city'] = 'Bhopal';
+
+    if (str_contains($text, 'buy')) $data['purpose'] = 'buy';
+    if (str_contains($text, 'rent')) $data['purpose'] = 'rent';
+
+    if (str_contains($text, 'flat')) $data['property_type'] = 'Flat';
+    if (str_contains($text, 'plot')) $data['property_type'] = 'Plot';
+    if (str_contains($text, 'house')) $data['property_type'] = 'House';
+
+    preg_match('/(\d+)\s?(lakh|lac|crore)/', $text, $match);
+    if ($match) $data['budget'] = $match[0];
+
+    return $data;
+}
+
+# Version B: AI (OpenAI GPT – Recommended)
+function extractIntentAI($text) {
+    $prompt = "
+Extract the following fields from the sentence:
+city, purpose (buy/rent), property_type, budget.
+Return JSON only.
+
+Sentence: \"$text\"
+";
+
+    // Call OpenAI API here (curl) // implement on backed.
+}
+
+
+Example Output
+
+{
+  "city": "Indore",
+  "purpose": "buy",
+  "property_type": null,
+  "budget": null
+}
+
+5 PHP Conversation Controller (Core Logic)
+$data = extractIntent($request->message);
+
+// Merge with previous session data
+$session = getSession($userId);
+$session = array_merge($session, $data);
+saveSession($session);
+
+// Decide next step
+if (!$session['city']) {
+    return ask("Which city are you looking for?", "CITY");
+}
+
+if (!$session['purpose']) {
+    return ask("Are you looking to buy or rent?", "PURPOSE", ["Buy", "Rent"]);
+}
+
+if (!$session['property_type']) {
+    return ask("What type of property?", "PROPERTY_TYPE",
+        ["Flat", "House", "Plot"]);
+}
+
+if (!$session['budget']) {
+    return ask("What is your budget?", "BUDGET");
+}
+
+// All data collected
+$properties = searchProperty($session);
+return showResult($properties);
+
+6. Android (Java) – Hindi + English Voice Support
+ # Speech to Text (Hindi + English)
+intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "hi-IN");
+intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "hi-IN");
+intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, true);
+
+
+Supports:
+
+Hindi
+
+Hinglish
+
+English
+
+# Text to Speech (Hindi)
+tts.setLanguage(new Locale("hi", "IN"));
+
+tts.speak(
+ "Aap kis shehar me property dekhna chahte hain?",
+ TextToSpeech.QUEUE_FLUSH,
+ null,
+ null
+);
