@@ -1,11 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>API Flow</title>
-</head>
-<body>
-<pre>
-
 Below is everything in detail, exactly as you asked — API structure, PHP intent code, conversation diagram, and Hindi voice support.
 This is production-ready and fits Android (Java) + PHP backend.
 
@@ -176,7 +168,3 @@ tts.speak(
  null,
  null
 );
-
-</pre>
-</body>
-</html>
